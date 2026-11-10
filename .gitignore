@@ -38,4 +38,9 @@ htmlcov/
 .idea/
 .vscode/
 
+# ---- VPN client runtime & secrets ----
+vpn_client/bin/
+vpn_client/.hwid
+vpn_client/active_config.json
+
 # ВАЖНО: папка .agents (ECC framework) НЕ игнорируется — она версионируется
