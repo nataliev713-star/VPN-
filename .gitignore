@@ -1,0 +1,38 @@
+# ---- Secrets ----
+.env
+.env.*
+*.pem
+*.key
+
+# ---- Dependencies ----
+node_modules/
+vendor/
+__pycache__/
+*.egg-info/
+.venv/
+venv/
+
+# ---- Temp / caches ----
+*.tmp
+*.log
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+~$*
+$RECYCLE.BIN/
+System Volume Information/
+
+# ---- Build output ----
+dist/
+build/
+out/
+*.pyc
+.coverage
+htmlcov/
+
+# ---- Editors / IDE ----
+.idea/
+.vscode/
+
+# ВАЖНО: папка .agents (ECC framework) НЕ игнорируется — она версионируется
