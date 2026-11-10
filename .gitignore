@@ -30,6 +30,9 @@ out/
 *.pyc
 .coverage
 htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
 # ---- Editors / IDE ----
 .idea/
