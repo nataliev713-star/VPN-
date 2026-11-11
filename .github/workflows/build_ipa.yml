@@ -1,4 +1,4 @@
-name: Build Shadowrocket Replica IPA
+name: Build Shadowrocket IPA
 
 on:
   push:
@@ -25,10 +25,10 @@ jobs:
         working-directory: ios_replica
         run: |
           xcodebuild archive \
-            -project ShadowrocketReplica.xcodeproj \
-            -scheme ShadowrocketReplica \
+            -project Shadowrocket.xcodeproj \
+            -scheme Shadowrocket \
             -destination "generic/platform=iOS" \
-            -archivePath build/ShadowrocketReplica.xcarchive \
+            -archivePath build/Shadowrocket.xcarchive \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO
 
@@ -36,16 +36,16 @@ jobs:
         working-directory: ios_replica
         run: |
           mkdir -p build/Payload
-          cp -r build/ShadowrocketReplica.xcarchive/Products/Applications/ShadowrocketReplica.app build/Payload/
+          cp -r build/Shadowrocket.xcarchive/Products/Applications/Shadowrocket.app build/Payload/
           
-          # Копируем иконки для поддержки OTA Manifest в ботах подписи
-          cp ShadowrocketReplica/Resources/Icons/*.png build/Payload/ShadowrocketReplica.app/
-          cp ShadowrocketReplica/Resources/Icons/iTunesArtwork.png build/Payload/ShadowrocketReplica.app/iTunesArtwork
+          # Копируем иконки для идеальной совместимости с OTA в IPAMarket
+          cp ShadowrocketReplica/Resources/Icons/*.png build/Payload/Shadowrocket.app/
+          cp ShadowrocketReplica/Resources/Icons/iTunesArtwork.png build/Payload/Shadowrocket.app/iTunesArtwork
           
-          cd build && zip -r Shadowrocket-Replica.ipa Payload
+          cd build && zip -r Shadowrocket.ipa Payload
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Shadowrocket-Replica-IPA
-          path: ios_replica/build/Shadowrocket-Replica.ipa
+          name: Shadowrocket-IPA
+          path: ios_replica/build/Shadowrocket.ipa

@@ -1,6 +1,6 @@
-name: ShadowrocketReplica
+name: Shadowrocket
 options:
-  bundleIdPrefix: com.shadowrocket.replica
+  bundleIdPrefix: com.shadowrocket.app
   deploymentTarget:
     iOS: "16.0"
   xcodeVersion: "15.0"
@@ -11,9 +11,10 @@ settings:
     CODE_SIGNING_ALLOWED: "NO"
     CODE_SIGNING_REQUIRED: "NO"
     DEVELOPMENT_TEAM: ""
+    PRODUCT_NAME: "Shadowrocket"
 
 targets:
-  ShadowrocketReplica:
+  Shadowrocket:
     type: application
     platform: iOS
     sources:
@@ -23,25 +24,10 @@ targets:
           - "Resources/PacketTunnel-Info.plist"
     info:
       path: ShadowrocketReplica/Resources/Info.plist
-    dependencies:
-      - target: PacketTunnel
     frameworks:
       - framework: NetworkExtension.framework
       - framework: SystemConfiguration.framework
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.shadowrocket.replica
-
-  PacketTunnel:
-    type: app-extension
-    platform: iOS
-    sources:
-      - path: ShadowrocketReplica/PacketTunnel
-    info:
-      path: ShadowrocketReplica/Resources/PacketTunnel-Info.plist
-    frameworks:
-      - framework: NetworkExtension.framework
-      - framework: SystemConfiguration.framework
-    settings:
-      base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.shadowrocket.replica.PacketTunnel
+        PRODUCT_BUNDLE_IDENTIFIER: com.shadowrocket.app
+        PRODUCT_NAME: "Shadowrocket"
