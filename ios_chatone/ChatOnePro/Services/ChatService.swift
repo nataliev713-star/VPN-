@@ -25,11 +25,11 @@ public final class ChatService: ObservableObject {
         didSet { UserDefaults.standard.set(globalSystemPrompt, forKey: "chatone_system_prompt") }
     }
     
-    // Pro Status: Always True (Hack/Replica feature: all pro features active)
+    // Pro Status: Always True
     public let isProUnlocked: Bool = true
     
     private var streamTask: Task<Void, Never>?
-    private let sessionsKey = "chatone_saved_sessions"
+    private let sessionsKey = "chatone_saved_sessions_v2"
 
     public var currentSession: ChatSession? {
         guard let id = currentSessionId else { return sessions.first }
@@ -51,13 +51,47 @@ public final class ChatService: ObservableObject {
 
         loadSessions()
         if sessions.isEmpty {
-            let initial = ChatSession(
-                title: "Welcome to ChatOne Pro",
+            // Seed with exact UI conversations matching user's photo
+            let pinned = ChatSession(
+                title: "вся хуйня",
+                messages: [ChatMessage(role: .assistant, content: "Привет! Чем могу помочь?")],
+                modelId: selectedModelId,
+                systemPrompt: globalSystemPrompt,
+                isPinned: true
+            )
+            let conv1 = ChatSession(
+                title: "Новости Новосибирска сейчас",
+                messages: [ChatMessage(role: .assistant, content: "Вот актуальные события и новости Новосибирска на сегодня...")],
                 modelId: selectedModelId,
                 systemPrompt: globalSystemPrompt
             )
-            sessions.append(initial)
-            currentSessionId = initial.id
+            let conv2 = ChatSession(
+                title: "Стихотворение о Даниле Багрове",
+                messages: [ChatMessage(role: .assistant, content: "В чем сила, брат? В правде сила...")],
+                modelId: selectedModelId,
+                systemPrompt: globalSystemPrompt
+            )
+            let conv3 = ChatSession(
+                title: "Приветствие",
+                messages: [ChatMessage(role: .assistant, content: "Здравствуйте! Чем я могу быть полезен?")],
+                modelId: selectedModelId,
+                systemPrompt: globalSystemPrompt
+            )
+            let conv4 = ChatSession(
+                title: "Чё не базаришь со мной?",
+                messages: [ChatMessage(role: .assistant, content: "Я тут, на связи! Задавай любой вопрос.")],
+                modelId: selectedModelId,
+                systemPrompt: globalSystemPrompt
+            )
+            let conv5 = ChatSession(
+                title: "Расчет размера тормозного диска авто",
+                messages: [ChatMessage(role: .assistant, content: "Для правильного расчета диаметра и толщины тормозного диска необходимо учитывать массу авто, развесовку и кинетическую энергию...")],
+                modelId: selectedModelId,
+                systemPrompt: globalSystemPrompt
+            )
+
+            sessions = [pinned, conv1, conv2, conv3, conv4, conv5]
+            currentSessionId = conv1.id
             saveSessions()
         } else {
             currentSessionId = sessions.first?.id
@@ -67,7 +101,7 @@ public final class ChatService: ObservableObject {
     public func createNewSession(withModel modelId: String? = nil, initialPrompt: String? = nil) {
         let model = modelId ?? selectedModelId
         var session = ChatSession(
-            title: "New Chat",
+            title: "Новый разговор",
             modelId: model,
             systemPrompt: globalSystemPrompt
         )
@@ -83,6 +117,12 @@ public final class ChatService: ObservableObject {
                 await streamResponse(for: session.id)
             }
         }
+    }
+
+    public func togglePin(id: UUID) {
+        guard let idx = sessions.firstIndex(where: { $0.id == id }) else { return }
+        sessions[idx].isPinned.toggle()
+        saveSessions()
     }
 
     public func deleteSession(id: UUID) {
@@ -110,10 +150,9 @@ public final class ChatService: ObservableObject {
         sessions[index].messages.append(userMsg)
         sessions[index].updatedAt = Date()
 
-        // Auto-title from first user message if still default
-        if sessions[index].title == "New Chat" || sessions[index].title == "Welcome to ChatOne Pro" {
+        if sessions[index].title == "Новый разговор" || sessions[index].title == "New Chat" {
             let prefix = String(text.prefix(32)).trimmingCharacters(in: .whitespacesAndNewlines)
-            sessions[index].title = prefix.isEmpty ? "Chat" : prefix
+            sessions[index].title = prefix.isEmpty ? "Разговор" : prefix
         }
 
         saveSessions()
@@ -163,7 +202,7 @@ public final class ChatService: ObservableObject {
                     if let sIdx = self.sessions.firstIndex(where: { $0.id == sessionId }),
                        let mIdx = self.sessions[sIdx].messages.firstIndex(where: { $0.id == assistantMsgId }) {
                         if self.sessions[sIdx].messages[mIdx].content.isEmpty {
-                            self.sessions[sIdx].messages[mIdx].content = "⚠️ Connection error: \(error.localizedDescription)\n\nPlease check your API Key and Base URL in Settings."
+                            self.sessions[sIdx].messages[mIdx].content = "⚠️ Ошибка подключения: \(error.localizedDescription)\n\nПожалуйста, проверьте API-ключ и Base URL в Настройках."
                         }
                         self.sessions[sIdx].messages[mIdx].isStreaming = false
                     }
@@ -214,7 +253,7 @@ public final class ChatService: ObservableObject {
             throw URLError(.badServerResponse)
         }
         guard (200...299).contains(httpResponse.statusCode) else {
-            throw NSError(domain: "ChatOne", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: "Server returned HTTP \(httpResponse.statusCode)"])
+            throw NSError(domain: "ChatOne", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: "Сервер вернул код \(httpResponse.statusCode)"])
         }
 
         for try await line in bytes.lines {

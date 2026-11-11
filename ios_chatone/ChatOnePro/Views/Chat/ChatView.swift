@@ -4,7 +4,7 @@ public struct ChatView: View {
     @ObservedObject var chatService: ChatService
 
     @State private var inputText: String = ""
-    @State private var showHistorySheet: Bool = false
+    @State private var isDrawerOpen: Bool = false
     @State private var showSettingsSheet: Bool = false
 
     public init(chatService: ChatService) {
@@ -12,110 +12,123 @@ public struct ChatView: View {
     }
 
     public var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                if let session = chatService.currentSession, !session.messages.isEmpty {
-                    messagesScrollView(for: session)
-                } else {
-                    welcomeAndPresetsView
-                }
+        GeometryReader { geometry in
+            ZStack(alignment: .leading) {
+                // Main Chat Screen
+                VStack(spacing: 0) {
+                    // Top Navigation Header (photo 1)
+                    headerBar
+                        .padding(.horizontal, 20)
+                        .padding(.top, 12)
+                        .padding(.bottom, 8)
+                        .background(Color.black)
 
-                InputBarView(
-                    text: $inputText,
-                    isStreaming: chatService.isStreaming,
-                    onSend: {
-                        let text = inputText
-                        inputText = ""
-                        chatService.sendMessage(text)
-                    },
-                    onStop: {
-                        chatService.cancelStreaming()
-                    }
-                )
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        showHistorySheet = true
-                    } label: {
-                        Image(systemName: "clock.arrow.circlepath")
-                            .font(.system(size: 16))
-                    }
-                }
+                    // Middle View: Watermark if empty, or messages list
+                    ZStack {
+                        Color.black.ignoresSafeArea()
 
-                ToolbarItem(placement: .principal) {
-                    modelPickerMenu
-                }
-
-                ToolbarItemGroup(placement: .navigationBarTrailing) {
-                    Button {
-                        chatService.createNewSession()
-                    } label: {
-                        Image(systemName: "square.and.pencil")
-                            .font(.system(size: 16))
-                    }
-
-                    Button {
-                        showSettingsSheet = true
-                    } label: {
-                        Image(systemName: "gearshape")
-                            .font(.system(size: 16))
-                    }
-                }
-            }
-            .sheet(isPresented: $showHistorySheet) {
-                HistoryView(chatService: chatService)
-            }
-            .sheet(isPresented: $showSettingsSheet) {
-                SettingsView(chatService: chatService)
-            }
-        }
-    }
-
-    private var modelPickerMenu: some View {
-        Menu {
-            ForEach(AIModel.defaultModels) { model in
-                Button {
-                    chatService.selectedModelId = model.id
-                    if let curId = chatService.currentSessionId,
-                       let idx = chatService.sessions.firstIndex(where: { $0.id == curId }) {
-                        chatService.sessions[idx].modelId = model.id
-                    }
-                } label: {
-                    HStack {
-                        Text(model.name)
-                        if chatService.selectedModelId == model.id {
-                            Image(systemName: "checkmark")
+                        if let session = chatService.currentSession, !session.messages.isEmpty {
+                            messagesScrollView(for: session)
+                        } else {
+                            // Empty State Watermark (photo 1)
+                            VStack {
+                                Spacer()
+                                GrokEmblemView(size: 130, color: Color(white: 0.16))
+                                Spacer()
+                            }
                         }
                     }
+
+                    // Bottom Input Area (photo 1)
+                    InputBarView(
+                        text: $inputText,
+                        selectedModelId: $chatService.selectedModelId,
+                        isStreaming: chatService.isStreaming,
+                        onSend: {
+                            let text = inputText
+                            inputText = ""
+                            chatService.sendMessage(text)
+                        },
+                        onStop: {
+                            chatService.cancelStreaming()
+                        },
+                        onSelectSkill: { prompt in
+                            inputText = ""
+                            chatService.sendMessage(prompt)
+                        }
+                    )
+                }
+                .background(Color.black)
+                .disabled(isDrawerOpen)
+
+                // Dimming Overlay when Drawer is open
+                if isDrawerOpen {
+                    Color.black.opacity(0.5)
+                        .ignoresSafeArea()
+                        .onTapGesture {
+                            withAnimation(.easeInOut(duration: 0.25)) {
+                                isDrawerOpen = false
+                            }
+                        }
+                }
+
+                // Sliding Left Drawer (photo 2)
+                if isDrawerOpen {
+                    SidebarDrawerView(
+                        chatService: chatService,
+                        isOpen: $isDrawerOpen,
+                        showSettings: $showSettingsSheet
+                    )
+                    .frame(width: min(geometry.size.width * 0.88, 360))
+                    .transition(.move(edge: .leading))
+                    .zIndex(10)
                 }
             }
-        } label: {
-            HStack(spacing: 4) {
-                Text(currentModelName)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.primary)
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundColor(.secondary)
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 4)
-            .background(Color.secondary.opacity(0.12))
-            .clipShape(Capsule())
+            .gesture(
+                DragGesture()
+                    .onEnded { value in
+                        if value.translation.width > 60 && !isDrawerOpen {
+                            withAnimation(.easeInOut(duration: 0.25)) {
+                                isDrawerOpen = true
+                            }
+                        } else if value.translation.width < -60 && isDrawerOpen {
+                            withAnimation(.easeInOut(duration: 0.25)) {
+                                isDrawerOpen = false
+                            }
+                        }
+                    }
+            )
+        }
+        .preferredColorScheme(.dark)
+        .sheet(isPresented: $showSettingsSheet) {
+            SettingsView(chatService: chatService)
         }
     }
 
-    private var currentModelName: String {
-        let currentId = chatService.currentSession?.modelId ?? chatService.selectedModelId
-        return AIModel.defaultModels.first(where: { $0.id == currentId })?.name ?? currentId
+    private var headerBar: some View {
+        HStack(spacing: 10) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    isDrawerOpen.toggle()
+                }
+            } label: {
+                HStack(spacing: 8) {
+                    GrokEmblemView(size: 24, color: .white)
+                    Text("Grok")
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            }
+            .buttonStyle(.plain)
+
+            Spacer()
+        }
     }
 
     private func messagesScrollView(for session: ChatSession) -> some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(spacing: 16) {
+                LazyVStack(spacing: 18) {
                     ForEach(session.messages) { msg in
                         MessageBubbleView(message: msg) { content in
                             UIPasteboard.general.string = content
@@ -137,50 +150,6 @@ public struct ChatView: View {
                         proxy.scrollTo(lastId, anchor: .bottom)
                     }
                 }
-            }
-        }
-    }
-
-    private var welcomeAndPresetsView: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                Spacer(minLength: 20)
-
-                // Icon / Logo
-                ZStack {
-                    Circle()
-                        .fill(Color.primary.opacity(0.06))
-                        .frame(width: 80, height: 80)
-                    Image(systemName: "circle.circle.fill")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 50, height: 50)
-                        .foregroundColor(.primary)
-                }
-
-                VStack(spacing: 6) {
-                    HStack(spacing: 6) {
-                        Text("ChatOne")
-                            .font(.system(size: 26, weight: .bold))
-                        Text("PRO")
-                            .font(.system(size: 12, weight: .bold))
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .clipShape(Capsule())
-                    }
-
-                    Text("Where intelligence meets simplicity.")
-                        .font(.system(size: 14))
-                        .foregroundColor(.secondary)
-                }
-
-                PromptPresetsView { prompt in
-                    inputText = prompt
-                }
-
-                Spacer(minLength: 20)
             }
         }
     }
