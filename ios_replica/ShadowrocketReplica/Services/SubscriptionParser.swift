@@ -11,8 +11,11 @@ public final class SubscriptionParser {
         }
         
         var request = URLRequest(url: url)
-        request.setValue("Shadowrocket/1990 CFNetwork/1410.0.3 Darwin/22.4.0", forHTTPHeaderField: "User-Agent")
-        request.timeoutInterval = 10.0
+        // Точный User-Agent оригинального Shadowrocket для обхода проверки провайдеров (PandaVPN и др.)
+        request.setValue("Shadowrocket/2.2.63 (iPhone; iOS 18.0; Scale/3.00)", forHTTPHeaderField: "User-Agent")
+        request.setValue("v2rayN/6.23", forHTTPHeaderField: "X-Client-Agent")
+        request.setValue(UUID().uuidString, forHTTPHeaderField: "X-HWID")
+        request.timeoutInterval = 12.0
         
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
@@ -44,7 +47,10 @@ public final class SubscriptionParser {
             guard !trimmed.isEmpty else { continue }
             
             if let node = parseNodeURL(trimmed, defaultIndex: index + 1) {
-                parsedNodes.append(node)
+                // Игнорируем заглушки с хостом 0.0.0.0 или сообщениями об ошибках
+                if node.host != "0.0.0.0" && !node.name.lowercased().contains("не поддерживается") {
+                    parsedNodes.append(node)
+                }
             }
         }
         
@@ -100,7 +106,6 @@ public final class SubscriptionParser {
     }
     
     private func parseShadowsocks(_ urlString: String, defaultIndex: Int) -> ProxyNode? {
-        // ss://BASE64@host:port#Name или ss://BASE64#Name
         let clean = urlString.replacingOccurrences(of: "ss://", with: "")
         let parts = clean.components(separatedBy: "#")
         let connectionPart = parts[0]

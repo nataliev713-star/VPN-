@@ -23,9 +23,25 @@ targets:
           - "Resources/PacketTunnel-Info.plist"
     info:
       path: ShadowrocketReplica/Resources/Info.plist
+    dependencies:
+      - target: PacketTunnel
     frameworks:
       - framework: NetworkExtension.framework
       - framework: SystemConfiguration.framework
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.shadowrocket.replica
+
+  PacketTunnel:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: ShadowrocketReplica/PacketTunnel
+    info:
+      path: ShadowrocketReplica/Resources/PacketTunnel-Info.plist
+    frameworks:
+      - framework: NetworkExtension.framework
+      - framework: SystemConfiguration.framework
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.shadowrocket.replica.PacketTunnel
