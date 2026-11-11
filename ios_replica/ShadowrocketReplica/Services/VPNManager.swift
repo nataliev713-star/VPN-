@@ -124,7 +124,7 @@ public final class VPNManager: ObservableObject {
             p.serverAddress = active.host
             p.remoteIdentifier = active.sni.isEmpty ? active.host : active.sni
             p.localIdentifier = "Shadowrocket"
-            p.useExtendedAuth = false
+            p.useExtendedAuthentication = false
             p.disconnectOnSleep = false
             
             vpnManager.protocolConfiguration = p
