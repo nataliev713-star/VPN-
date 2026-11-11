@@ -1,0 +1,46 @@
+name: Build Shadowrocket Replica IPA
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Generate & Compile IPA
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode Project
+        working-directory: ios_replica
+        run: xcodegen generate
+
+      - name: Build Archive
+        working-directory: ios_replica
+        run: |
+          xcodebuild archive \
+            -project ShadowrocketReplica.xcodeproj \
+            -scheme ShadowrocketReplica \
+            -destination "generic/platform=iOS" \
+            -archivePath build/ShadowrocketReplica.xcarchive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO
+
+      - name: Package Unsigned IPA
+        working-directory: ios_replica
+        run: |
+          mkdir -p build/Payload
+          cp -r build/ShadowrocketReplica.xcarchive/Products/Applications/ShadowrocketReplica.app build/Payload/
+          cd build && zip -r Shadowrocket-Replica.ipa Payload
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shadowrocket-Replica-IPA
+          path: ios_replica/build/Shadowrocket-Replica.ipa

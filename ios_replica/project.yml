@@ -1,0 +1,48 @@
+name: ShadowrocketReplica
+options:
+  bundleIdPrefix: com.shadowrocket.replica
+  deploymentTarget:
+    iOS: "16.0"
+  xcodeVersion: "15.0"
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    CODE_SIGNING_ALLOWED: "NO"
+    CODE_SIGNING_REQUIRED: "NO"
+    DEVELOPMENT_TEAM: ""
+
+targets:
+  ShadowrocketReplica:
+    type: application
+    platform: iOS
+    sources:
+      - path: ShadowrocketReplica
+        excludes:
+          - "PacketTunnel/**"
+          - "Resources/PacketTunnel-Info.plist"
+    info:
+      path: ShadowrocketReplica/Resources/Info.plist
+    entitlements:
+      path: ShadowrocketReplica/ShadowrocketReplica.entitlements
+    dependencies:
+      - target: PacketTunnel
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.shadowrocket.replica
+
+  PacketTunnel:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: ShadowrocketReplica/PacketTunnel
+    info:
+      path: ShadowrocketReplica/Resources/PacketTunnel-Info.plist
+    entitlements:
+      path: ShadowrocketReplica/PacketTunnel/PacketTunnel.entitlements
+    frameworks:
+      - framework: NetworkExtension.framework
+      - framework: SystemConfiguration.framework
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.shadowrocket.replica.PacketTunnel
