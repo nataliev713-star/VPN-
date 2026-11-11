@@ -36,9 +36,10 @@ jobs:
         working-directory: ios_chatone
         run: |
           mkdir -p build/Payload
-          cp -r build/ChatOnePro.xcarchive/Products/Applications/ChatOnePro.app build/Payload/
+          APP_PATH=$(find build/ChatOnePro.xcarchive/Products/Applications -name "*.app" -maxdepth 1)
+          cp -r "$APP_PATH" build/Payload/ChatOnePro.app
           
-          # Копируем иконки для идеальной совместимости с OTA в IPAMarket
+          # Copy icons for OTA in IPAMarket
           cp ChatOnePro/Resources/Icons/*.png build/Payload/ChatOnePro.app/
           cp ChatOnePro/Resources/Icons/iTunesArtwork build/Payload/ChatOnePro.app/iTunesArtwork
           
