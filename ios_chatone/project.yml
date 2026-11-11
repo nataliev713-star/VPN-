@@ -1,0 +1,32 @@
+name: ChatOnePro
+options:
+  bundleIdPrefix: com.chatone.pro
+  deploymentTarget:
+    iOS: "16.0"
+  xcodeVersion: "15.0"
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    CODE_SIGNING_ALLOWED: "NO"
+    CODE_SIGNING_REQUIRED: "NO"
+    DEVELOPMENT_TEAM: ""
+    PRODUCT_NAME: "ChatOne Pro"
+
+targets:
+  ChatOnePro:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - path: ChatOnePro
+    info:
+      path: ChatOnePro/Resources/Info.plist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.chatone.pro
+        PRODUCT_NAME: "ChatOne Pro"
+        INFOPLIST_FILE: ChatOnePro/Resources/Info.plist
+        GENERATE_INFOPLIST_FILE: "NO"
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"

@@ -1,13 +1,16 @@
-name: Build Shadowrocket IPA
+name: Build ChatOne Pro IPA
 
 on:
   push:
     branches: [ "main" ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
-    name: Generate & Compile IPA
+    name: Generate & Compile ChatOne Pro IPA
     runs-on: macos-latest
 
     steps:
@@ -18,34 +21,43 @@ jobs:
         run: brew install xcodegen
 
       - name: Generate Xcode Project
-        working-directory: ios_replica
+        working-directory: ios_chatone
         run: xcodegen generate
 
       - name: Build Archive
-        working-directory: ios_replica
+        working-directory: ios_chatone
         run: |
           xcodebuild archive \
-            -project Shadowrocket.xcodeproj \
-            -scheme Shadowrocket \
+            -project ChatOnePro.xcodeproj \
+            -scheme ChatOnePro \
             -destination "generic/platform=iOS" \
-            -archivePath build/Shadowrocket.xcarchive \
+            -archivePath build/ChatOnePro.xcarchive \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO
 
       - name: Package OTA-Compliant IPA
-        working-directory: ios_replica
+        working-directory: ios_chatone
         run: |
           mkdir -p build/Payload
-          cp -r build/Shadowrocket.xcarchive/Products/Applications/Shadowrocket.app build/Payload/
+          cp -r build/ChatOnePro.xcarchive/Products/Applications/ChatOnePro.app build/Payload/
           
-          # Копируем иконки для идеальной совместимости с OTA в IPAMarket
-          cp ShadowrocketReplica/Resources/Icons/*.png build/Payload/Shadowrocket.app/
-          cp ShadowrocketReplica/Resources/Icons/iTunesArtwork.png build/Payload/Shadowrocket.app/iTunesArtwork
+          # Copy all icons into .app root for IPAMarket / OTA resigner
+          cp ChatOnePro/Resources/Icons/*.png build/Payload/ChatOnePro.app/
+          cp ChatOnePro/Resources/Icons/iTunesArtwork build/Payload/ChatOnePro.app/iTunesArtwork
           
-          cd build && zip -r Shadowrocket.ipa Payload
+          cd build && zip -r ChatOne-Pro.ipa Payload
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Shadowrocket-IPA
-          path: ios_replica/build/Shadowrocket.ipa
+          name: ChatOne-Pro-IPA
+          path: ios_chatone/build/ChatOne-Pro.ipa
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create v2.0.0 ios_chatone/build/ChatOne-Pro.ipa \
+            --title "ChatOne Pro v1.0.0 (Clean OTA)" \
+            --notes "ChatOne Pro standalone iOS replica. Pro unlocked, single-target architecture, full icon suite, no update prompt." \
+            --clobber
