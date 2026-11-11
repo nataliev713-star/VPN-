@@ -7,12 +7,8 @@ on:
 
 jobs:
   build:
-    name: Build on ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [macos-latest, macos-14]
-    runs-on: ${{ matrix.os }}
+    name: Generate & Compile IPA
+    runs-on: macos-latest
 
     steps:
       - name: Checkout Repository
@@ -42,7 +38,7 @@ jobs:
           mkdir -p build/Payload
           cp -r build/ChatOnePro.xcarchive/Products/Applications/ChatOnePro.app build/Payload/
           
-          # Copy icons for OTA in IPAMarket
+          # Копируем иконки для идеальной совместимости с OTA в IPAMarket
           cp ChatOnePro/Resources/Icons/*.png build/Payload/ChatOnePro.app/
           cp ChatOnePro/Resources/Icons/iTunesArtwork build/Payload/ChatOnePro.app/iTunesArtwork
           
@@ -51,5 +47,5 @@ jobs:
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ChatOne-Pro-IPA-${{ matrix.os }}
+          name: ChatOne-Pro-IPA
           path: ios_chatone/build/ChatOne-Pro.ipa
