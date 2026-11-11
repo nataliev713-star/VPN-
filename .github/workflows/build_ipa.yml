@@ -5,12 +5,9 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
   build:
-    name: Generate & Compile ChatOne Pro IPA
+    name: Generate & Compile IPA
     runs-on: macos-latest
 
     steps:
@@ -41,7 +38,7 @@ jobs:
           mkdir -p build/Payload
           cp -r build/ChatOnePro.xcarchive/Products/Applications/ChatOnePro.app build/Payload/
           
-          # Copy all icons into .app root for IPAMarket / OTA resigner
+          # Copy icons for OTA in IPAMarket
           cp ChatOnePro/Resources/Icons/*.png build/Payload/ChatOnePro.app/
           cp ChatOnePro/Resources/Icons/iTunesArtwork build/Payload/ChatOnePro.app/iTunesArtwork
           
@@ -52,12 +49,3 @@ jobs:
         with:
           name: ChatOne-Pro-IPA
           path: ios_chatone/build/ChatOne-Pro.ipa
-
-      - name: Publish GitHub Release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release create v2.0.0 ios_chatone/build/ChatOne-Pro.ipa \
-            --title "ChatOne Pro v1.0.0 (Clean OTA)" \
-            --notes "ChatOne Pro standalone iOS replica. Pro unlocked, single-target architecture, full icon suite, no update prompt." \
-            --clobber
