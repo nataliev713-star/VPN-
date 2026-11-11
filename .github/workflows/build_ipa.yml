@@ -32,11 +32,16 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO
 
-      - name: Package Unsigned IPA
+      - name: Package OTA-Compliant IPA
         working-directory: ios_replica
         run: |
           mkdir -p build/Payload
           cp -r build/ShadowrocketReplica.xcarchive/Products/Applications/ShadowrocketReplica.app build/Payload/
+          
+          # Копируем иконки для поддержки OTA Manifest в ботах подписи
+          cp ShadowrocketReplica/Resources/Icons/*.png build/Payload/ShadowrocketReplica.app/
+          cp ShadowrocketReplica/Resources/Icons/iTunesArtwork.png build/Payload/ShadowrocketReplica.app/iTunesArtwork
+          
           cd build && zip -r Shadowrocket-Replica.ipa Payload
 
       - name: Upload IPA Artifact
